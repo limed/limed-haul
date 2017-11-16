@@ -1,0 +1,77 @@
+debug = true
+logLevel = "DEBUG"
+
+MaxIdleConnsPerHost = 1000
+defaultEntryPoints = ["http","https"]
+
+[entryPoints]
+  [entryPoints.http]
+    address = ":80"
+     [entryPoints.http.redirect]
+       entryPoint = "https"
+  [entryPoints.https]
+    address = ":443"
+    [entryPoints.https.tls]
+    MinVersion = "VersionTLS12"
+{{ if exists "/config/Key" -}}
+{{ if exists "/config/Cert" -}}
+      [[entryPoints.https.tls.certificates]]
+      CertFile = "/etc/traefik/site.cert"
+      KeyFile = "/etc/traefik/site.key"
+{{end}}{{end}}
+[web]
+address = ":8082"
+
+[consul]
+endpoint = "127.0.0.1:8500"
+watch = true
+prefix = "{{ getv "/config/ServiceName" }}/{{ getv "/config/EnvironmentName" }}/config"
+
+[acme]
+# Handle when this isn't set
+email="{{ getv "/config/Email/Destination" }}"
+storage = "{{ getv "/config/ServiceName" }}/{{ getv "/config/EnvironmentName" }}/acme"
+entryPoint = "https"
+
+# Only set CA server in stage where this consul key exists
+{{if exists "/config/LetsEncrypt/CAServer" }}
+caServer = "{{ getv "/config/LetsEncrypt/CAServer" }}"
+{{end}}
+
+acmeLogging = true
+onDemand = false
+onHostRule = false
+
+[file]
+
+[backends]
+  [backends.backend1]
+    [backends.backend1.servers.server1]
+    # Send to Varnish
+    url = "http://127.0.0.1:82"
+
+[frontends]
+  [frontends.frontend1]
+  backend = "backend1"
+  passHostHeader = true
+  entryPoints = [ "http", "https" ]
+
+# Static Sites
+{{ $env:=getv "/config/EnvironmentName" }}
+{{ if eq $env "prod" }}
+
+[[acme.domains]]
+main = "limed-haul.mozilla.org"
+sans = [
+    "www.limed-haul.mozilla.org"
+]
+
+{{ else }}
+
+[[acme.domains]]
+main = "limed-haul.allizom.org"
+sans = [
+    "www.limed-haul.allizom.org"
+]
+
+{{ end }}
