@@ -25,7 +25,7 @@ file { '/etc/nubis.d/99-jenkins':
   source => 'puppet:///nubis/files/jenkins-startup',
 }
 
-$jenkins_version = "2.73.2"
+$jenkins_version = "2.73.3"
 
 # jenkins 2.73.2 needs java8 apparently
 class { 'java8':
