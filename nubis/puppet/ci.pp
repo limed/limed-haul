@@ -27,17 +27,19 @@ file { '/etc/nubis.d/99-jenkins':
 
 $jenkins_version = "2.73.2"
 
+# jenkins 2.73.2 needs java8 apparently
+class { 'java8':
+}->
 package { 'daemon':
   ensure => 'present'
 }->
 class { 'jenkins':
   # Direct download because something in apt-land is borked with varnish ;-(
-  direct_download    => "https://pkg.jenkins.io/debian-stable/binary/jenkins_${jenkins_version}_all.deb",
-  repo               => false,
-  version            => 'latest',
+  direct_download   => "https://pkg.jenkins.io/debian-stable/binary/jenkins_${jenkins_version}_all.deb",
   configure_firewall => false,
   service_enable     => false,
   service_ensure     => 'stopped',
+  install_java       => false,
   config_hash        => {
     'JENKINS_ARGS' => {
       'value' => '--webroot=/var/cache/$NAME/war --httpPort=$HTTP_PORT --requestHeaderSize=16384 --prefix=/admin/haul-admin-$(nubis-metadata NUBIS_ENVIRONMENT)'
@@ -46,6 +48,7 @@ class { 'jenkins':
       'value' => '-Djenkins.install.runSetupWizard=false -Djava.awt.headless=true -Dhudson.diyChunking=false -Dhttp.proxyHost=proxy.service.consul -Dhttp.proxyPort=3128 -Dhttps.proxyHost=proxy.service.consul -Dhttps.proxyPort=3128'
     },
   },
+  require            => [ Class['java8'], Package['daemon'] ],
 }
 
 # Jenkins is already defining the user for this, so cheat
