@@ -9,7 +9,7 @@ resource "aws_route53_delegation_set" "haul-delegation" {
 }
 
 variable my_dns_zone {
-  type  = map
+  type  = "map"
 
   default = {
     stage = "limed.me"
