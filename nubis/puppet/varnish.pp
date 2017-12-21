@@ -50,16 +50,9 @@ staging::extract { "varnish_exporter.${varnish_exporter_version}.tar.gz":
   creates => '/usr/local/bin/prometheus_varnish_exporter',
 }
 
-upstart::job { 'varnish_exporter':
-    description    => 'Prometheus Varnish Exporter',
-    service_ensure => 'stopped',
-    service_enable => true,
-    # Never give up
-    respawn        => true,
-    respawn_limit  => 'unlimited',
-    start_on       => '(local-filesystems and net-device-up IFACE!=lo)',
-    user           => 'root',
-    group          => 'root',
-    exec           => '/usr/local/bin/prometheus_varnish_exporter',
+systemd::unit_file { 'varnish_exporter.service':
+  source => 'puppet:///nubis/files/varnish_exporter.systemd',
+}->
+service { 'varnish_exporter':
+  enable => true,
 }
-
