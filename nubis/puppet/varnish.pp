@@ -10,7 +10,9 @@ class {'varnish':
   storage_type         => 'file',
   varnish_storage_size => '1G',
   varnish_storage_file => '/mnt/varnish_storage.bin',
-}
+  version              => '4.1',
+} ->
+
 
 class { 'varnish::vcl':
   # Send to Apache
